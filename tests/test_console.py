@@ -1133,3 +1133,27 @@ def test_tty_compatible() -> None:
     assert not console.is_terminal
     # Should not have auto-detected
     assert not console.file.called_isatty
+
+
+def test_save_text_preserves_buffer_on_error():
+    console = Console(record=True)
+    console.print("IMPORTANT OUTPUT")
+    with pytest.raises(OSError):
+        console.save_text(r"Z:\invalid\non_existent_path\output.txt", clear=True)
+    assert console.export_text() == "IMPORTANT OUTPUT\n"
+
+
+def test_save_html_preserves_buffer_on_error():
+    console = Console(record=True)
+    console.print("IMPORTANT OUTPUT")
+    with pytest.raises(OSError):
+        console.save_html(r"Z:\invalid\non_existent_path\output.html", clear=True)
+    assert "IMPORTANT OUTPUT" in console.export_html()
+
+
+def test_save_svg_preserves_buffer_on_error():
+    console = Console(record=True, width=100)
+    console.print("IMPORTANT OUTPUT")
+    with pytest.raises(OSError):
+        console.save_svg(r"Z:\invalid\non_existent_path\output.svg", clear=True)
+    assert console.export_text() == "IMPORTANT OUTPUT\n"

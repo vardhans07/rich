@@ -2237,9 +2237,12 @@ class Console:
                 Defaults to ``False``.
 
         """
-        text = self.export_text(clear=clear, styles=styles)
+        text = self.export_text(clear=False, styles=styles)
         with open(path, "w", encoding="utf-8") as write_file:
             write_file.write(text)
+        if clear:
+            with self._record_buffer_lock:
+                del self._record_buffer[:]
 
     def export_html(
         self,
@@ -2342,12 +2345,15 @@ class Console:
         """
         html = self.export_html(
             theme=theme,
-            clear=clear,
+            clear=False,
             code_format=code_format,
             inline_styles=inline_styles,
         )
         with open(path, "w", encoding="utf-8") as write_file:
             write_file.write(html)
+        if clear:
+            with self._record_buffer_lock:
+                del self._record_buffer[:]
 
     def export_svg(
         self,
@@ -2396,7 +2402,7 @@ class Console:
             bgcolor = (
                 _theme.background_color
                 if (style.bgcolor is None or style.bgcolor.is_default)
-                else style.bgcolor.get_truecolor(_theme)
+                else style.bgcolor.get_truecolor(_theme, foreground=False)
             )
             if style.reverse:
                 color, bgcolor = bgcolor, color
@@ -2470,7 +2476,7 @@ class Console:
         with self._record_buffer_lock:
             segments = list(Segment.filter_control(self._record_buffer))
             if clear:
-                self._record_buffer.clear()
+                del self._record_buffer[:]
 
         if unique_id is None:
             unique_id = "terminal-" + str(
@@ -2506,7 +2512,7 @@ class Console:
                     background = (
                         _theme.background_color.hex
                         if style.bgcolor is None
-                        else style.bgcolor.get_truecolor(_theme).hex
+                        else style.bgcolor.get_truecolor(_theme, foreground=False).hex
                     )
 
                 text_length = cell_len(text)
@@ -2633,15 +2639,17 @@ class Console:
         svg = self.export_svg(
             title=title,
             theme=theme,
-            clear=clear,
+            clear=False,
             code_format=code_format,
             font_aspect_ratio=font_aspect_ratio,
             unique_id=unique_id,
         )
         with open(path, "w", encoding="utf-8") as write_file:
             write_file.write(svg)
-
-
+        if clear:
+            with self._record_buffer_lock:
+                del self._record_buffer[:]
+                
 if __name__ == "__main__":  # pragma: no cover
     console = Console(record=True)
 
